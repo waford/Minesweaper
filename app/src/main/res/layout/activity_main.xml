@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TableLayout
+        android:id="@+id/BoardSelection"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:stretchColumns="*">
+
+        <TableRow
+            android:layout_weight="1"
+            android:layout_gravity="fill">
+            <Button
+                android:id="@+id/SmallBoardButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:text="@string/smallButton"
+                android:onClick="sendBoardData"
+                android:contentDescription="@string/smallNumCols"/>
+
+            <Button
+                android:id="@+id/MediumBoardButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:text="@string/mediumButton"
+                android:onClick="sendBoardData"
+                android:contentDescription="@string/mediumNumCols"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_weight="1"
+            android:layout_gravity="center">
+            <Button
+                android:id="@+id/LargeBoardButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:text="@string/largeButton"
+                android:onClick="sendBoardData"
+                android:contentDescription="@string/largeNumCols"/>
+
+            <Button
+                android:id="@+id/CustomBoardButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:text="@string/customButton" />
+        </TableRow>
+
+
+    </TableLayout>
+
+</android.support.constraint.ConstraintLayout>

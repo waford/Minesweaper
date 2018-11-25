@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Minsweaper</string>
+    <string name="startTimer">0:00</string>
+    <string name="smallButton">Small</string>
+    <string name="mediumButton">Medium</string>
+    <string name="largeButton">Large</string>
+    <string name="customButton">Custom</string>
+    <string name="smallNumCols">5</string>
+    <string name="mediumNumCols">10</string>
+    <string name="largeNumCols">15</string>
+</resources>
