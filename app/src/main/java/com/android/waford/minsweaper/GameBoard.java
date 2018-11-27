@@ -6,9 +6,12 @@ import android.content.res.Resources;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.ViewUtils;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -21,6 +24,7 @@ public class GameBoard extends AppCompatActivity {
     private static final int BOMB_DENSITY = 4; //1 bomb per BOMB_DENSITY squares
     private int numCols;
     private int numRows;
+    private int boardHeight;
     private TableLayout gameBoard;
     private int tileSize;
     private int bombCount;
@@ -38,11 +42,12 @@ public class GameBoard extends AppCompatActivity {
 
         @Override
         public void run() {
+            //Timer function
             long millies = System.currentTimeMillis() - startTime;
             int seconds = (int) (millies / 1000);
             int minutes = seconds / 60;
             seconds = seconds % 60;
-            timer.setText(String.format("%d:%02d", minutes, seconds));
+            timer.setText(String.format("%02d:%02d", minutes, seconds));
             timerHandler.postDelayed(this, 500);
         }
     };
@@ -59,12 +64,20 @@ public class GameBoard extends AppCompatActivity {
         tileSize = setTileSize();
         bombCount = 0;
         numFlagsLeft = 0;
+        boardHeight = 0;
         numCorrectFlagged = 0;
         firstClick = true;
         flagsLeft = findViewById(R.id.Flags_Left);
         makeBoard(tileSize);
     }
 
+
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if(hasFocus) {
+            boardHeight = gameBoard.getHeight();
+        }
+    }
 
     private void makeBoard(int tileSize) {
         // Creates the gameboard imgTile.getCol(), imgTile.getRow()
@@ -77,7 +90,7 @@ public class GameBoard extends AppCompatActivity {
                 TileButton tile = new TileButton(this, i, j, numBombs);
                 tile.setImageResource(R.drawable.tile);
                 tile.setLayoutParams(params);
-                setTileImageClick(tile, numBombs, board.length, board[i].length);
+                setTileImageClick(tile, board.length, board[i].length);
                 row.addView(tile); //adds tile to row
             }
             gameBoard.addView(row, i); //adds row of tiles to gameboard
@@ -87,11 +100,13 @@ public class GameBoard extends AppCompatActivity {
     }
 
     private void checkWin() {
+        //Checks if there is a win based on if the number of correctly flagged bombs is equal to the
+        //number of bombs. Should add another win condition not based on flags
         if(numCorrectFlagged == this.bombCount) {
             timerHandler.removeCallbacks(timerRunnable);
             Toast win = Toast.makeText(this, "You won!", Toast.LENGTH_SHORT);
             win.show();
-            for(int i = 0; i < numRows; i++){
+            for(int i = 0; i < numRows; i++){ //Uncovers all the non-clicked tiles
                 for(int j = 0; j < numCols; j++) {
                     TileButton imgTile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
                     if(!imgTile.getIsClicked()) {
@@ -104,12 +119,13 @@ public class GameBoard extends AppCompatActivity {
     }
 
     private void lose(TileButton imgTile) {
+        //Called when a mine tile is pressed
         timerHandler.removeCallbacks(timerRunnable);
         imgTile.setImageResource(R.drawable.minelost);
         for(int i = 0; i < numRows; i++) {
             for(int j = 0; j < numCols; j++) {
                 TileButton tile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
-                if(!tile.getIsClicked() && tile.getNumBombs() == 9) {
+                if(!tile.getIsClicked() && tile.getNumBombs() == 9 && !tile.isMarked) {
                     tile.setImageResource(R.drawable.mine);
                 }
             }
@@ -247,7 +263,7 @@ public class GameBoard extends AppCompatActivity {
 
     }
 
-    private void setTileImageClick(final TileButton imgTile, final int numBombs, final int maxRow, final int maxCol) {
+    private void setTileImageClick(final TileButton imgTile, final int maxRow, final int maxCol) {
         imgTile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -267,10 +283,16 @@ public class GameBoard extends AppCompatActivity {
     }
 
     private int setTileSize() {
+        //Uses the width of the screen and height of the view to determin the the side length for tiles
         int width = Resources.getSystem().getDisplayMetrics().widthPixels;
+        int height = Resources.getSystem().getDisplayMetrics().heightPixels;
+        int pixelDPI = (int) Resources.getSystem().getDisplayMetrics().density;
         int tileSize = width / numCols;
-        int height = Resources.getSystem().getDisplayMetrics().heightPixels - tileSize;
-        numRows = height / tileSize;
+        int trim = tileSize;
+        if(trim < 50 * pixelDPI) {
+            trim = 50 * pixelDPI;
+        }
+        numRows = (height - trim) / tileSize;
         unOpened = numRows * numCols; //Sets number of unopened tiles
         return tileSize;
     }

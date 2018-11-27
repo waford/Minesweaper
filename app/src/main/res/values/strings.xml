@@ -8,4 +8,5 @@
     <string name="smallNumCols">5</string>
     <string name="mediumNumCols">10</string>
     <string name="largeNumCols">15</string>
+    <string name="startTime">00:00</string>
 </resources>
