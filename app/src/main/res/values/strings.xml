@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">Minsweaper</string>
-    <string name="startTimer">0:00</string>
+    <string name="app_name">Minesweeper</string>
     <string name="smallButton">Small</string>
     <string name="mediumButton">Medium</string>
     <string name="largeButton">Large</string>
@@ -8,5 +7,8 @@
     <string name="smallNumCols">5</string>
     <string name="mediumNumCols">10</string>
     <string name="largeNumCols">15</string>
-    <string name="startTime">00:00</string>
+    <string name="startTimer">00:00</string>
+    <string name="minesweeperTitle">MINESWEEPR</string>
+    <string name="instructions">Place holder for Instructions on how to play Minesweeper</string>
+    <string name="popupTitle">How to Play:</string>
 </resources>

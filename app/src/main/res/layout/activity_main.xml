@@ -6,11 +6,55 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <LinearLayout
+        android:id="@+id/MenuBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/backGroundGrey">
+
+            <Button
+                style="@style/MenuBarButtons"
+                android:id="@+id/leftMenuButton"
+                android:onClick="toggleInstructionsPopUp"
+                android:background="@drawable/instruction_button"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/minesweeperTitle"
+                android:textStyle="bold"
+                android:textSize="30sp"
+                android:textColor="#000FFF"
+                app:layout_constraintLeft_toLeftOf="@id/leftMenuButton"
+                app:layout_constraintRight_toRightOf="@id/rightMenuButton"/>
+
+            <Button
+                style="@style/MenuBarButtons"
+                android:id="@+id/rightMenuButton"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintRight_toRightOf="parent"/>
+
+        </android.support.constraint.ConstraintLayout>
+
+
+
+    </LinearLayout>
+
     <TableLayout
         android:id="@+id/BoardSelection"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:stretchColumns="*">
+        android:layout_height="0dp"
+        android:stretchColumns="*"
+        app:layout_constraintTop_toBottomOf="@+id/MenuBar"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <TableRow
             android:layout_weight="1"

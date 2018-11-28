@@ -6,12 +6,9 @@ import android.content.res.Resources;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.ViewUtils;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -95,21 +92,23 @@ public class GameBoard extends AppCompatActivity {
             }
             gameBoard.addView(row, i); //adds row of tiles to gameboard
         }
-        flagsLeft.setText(String.format("%d", numFlagsLeft));
+        flagsLeft.setText(String.format("%03d", numFlagsLeft));
 
     }
 
     private void checkWin() {
         //Checks if there is a win based on if the number of correctly flagged bombs is equal to the
         //number of bombs. Should add another win condition not based on flags
-        if(numCorrectFlagged == this.bombCount) {
+        boolean flagWin = numCorrectFlagged == this.bombCount;
+        boolean unOpenedWin = unOpened == bombCount;
+        if(flagWin || unOpenedWin) {
             timerHandler.removeCallbacks(timerRunnable);
             Toast win = Toast.makeText(this, "You won!", Toast.LENGTH_SHORT);
             win.show();
             for(int i = 0; i < numRows; i++){ //Uncovers all the non-clicked tiles
                 for(int j = 0; j < numCols; j++) {
                     TileButton imgTile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
-                    if(!imgTile.getIsClicked()) {
+                    if(!imgTile.getIsClicked() && imgTile.getNumBombs() != 9) {
                         imgTile.performClick();
                     }
                 }
@@ -140,7 +139,7 @@ public class GameBoard extends AppCompatActivity {
     }
 
     private void tileClick(TileButton tile, int maxRow, int maxCol) {
-        if(!tile.getIsClicked()) {
+        if(tile != null && !tile.getIsClicked()) {
             unOpened--;
         }
         if(firstClick) {
@@ -257,7 +256,7 @@ public class GameBoard extends AppCompatActivity {
             }
             numFlagsLeft--;
         }
-        flagsLeft.setText(String.format("%d", numFlagsLeft));
+        flagsLeft.setText(String.format("%03d", numFlagsLeft));
         checkWin();
 
 
@@ -274,9 +273,13 @@ public class GameBoard extends AppCompatActivity {
         imgTile.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Log.d(LOG_TAG, "Long click triggered");
-                markTile(imgTile);
-                return true;
+                if(!imgTile.getIsClicked()) {
+                    Log.d(LOG_TAG, "Long click triggered");
+                    markTile(imgTile);
+                    return true;
+                }
+                return false;
+
             }
         });
 

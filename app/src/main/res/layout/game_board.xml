@@ -15,38 +15,29 @@
         android:gravity="center">
 
         <TextView
+            style="@style/gameBoardCounters"
             android:id="@+id/Timer"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:text="@string/startTime"
-            android:textAlignment="center"
-            android:textSize="17pt"
+            android:text="@string/startTimer"
             android:textColor="@color/redFont"
-            android:background="@drawable/timer"
-            android:textStyle="bold"
-            android:fontFamily="serif"
-            android:layout_weight="1"
-            />
+            android:background="@drawable/timer" />
 
         <Button
             android:id="@+id/ResetButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/resetarrow"
+            android:background="@drawable/blue_reset_tile"
             android:onClick="ButtonResetBoard"
 
             />
 
         <TextView
+            style="@style/gameBoardCounters"
             android:id="@+id/Flags_Left"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:text="000"
-            android:textSize="15pt"
-            android:textColor="@color/redFont"
-            android:textAlignment="center"
             android:background="@drawable/timer"
-            android:layout_weight="1"/>
+            />
 
     </LinearLayout>
 

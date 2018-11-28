@@ -8,4 +8,21 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MenuBarButtons">
+        <item name="android:layout_width">30dp</item>
+        <item name="android:layout_height">30dp</item>
+
+    </style>
+
+    <style name="gameBoardCounters">
+        <item name="android:textSize">35sp</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textColor">@color/redFont</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
 </resources>
