@@ -4,11 +4,20 @@
     <string name="mediumButton">Medium</string>
     <string name="largeButton">Large</string>
     <string name="customButton">Custom</string>
-    <string name="smallNumCols">5</string>
+    <string name="tinyNumCols">4</string>
+    <string name="smallNumCols">6</string>
     <string name="mediumNumCols">10</string>
     <string name="largeNumCols">15</string>
     <string name="startTimer">00:00</string>
-    <string name="minesweeperTitle">MINESWEEPR</string>
+    <string name="minesweeperTitle">MINESWEEPER</string>
     <string name="instructions">Place holder for Instructions on how to play Minesweeper</string>
     <string name="popupTitle">How to Play:</string>
+    <string name="mainActivitytBannerUnitId">ca-app-pub-3203445673322999/9392880964</string>
+    <string name="gameBoardBannerUnitId">ca-app-pub-3203445673322999/9133273930</string>
+    <string name="testUnitId">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="tinyButton">Tiny</string>
+    <string name="VersionInfo">Version: 1.0   Created by Wesley Ford</string>
+    <string name="rate_this_app">Rate this App</string>
+    <string name="highscores">HighScores</string>
+    <string name="difficulty">Difficulty: </string>
 </resources>

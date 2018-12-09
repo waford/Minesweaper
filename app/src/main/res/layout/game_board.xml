@@ -14,12 +14,15 @@
         android:orientation="horizontal"
         android:gravity="center">
 
+
+
         <TextView
             style="@style/gameBoardCounters"
-            android:id="@+id/Timer"
-            android:text="@string/startTimer"
-            android:textColor="@color/redFont"
-            android:background="@drawable/timer" />
+            android:id="@+id/Flags_Left"
+            android:text="000"
+            android:background="@drawable/timer"
+            />
+        
 
         <Button
             android:id="@+id/ResetButton"
@@ -32,22 +35,45 @@
 
         <TextView
             style="@style/gameBoardCounters"
-            android:id="@+id/Flags_Left"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:text="000"
-            android:background="@drawable/timer"
-            />
-
+            android:id="@+id/Timer"
+            android:text="@string/startTimer"
+            android:textColor="@color/redFont"
+            android:background="@drawable/timer" />
     </LinearLayout>
 
     <TableLayout
         android:id="@+id/GameBoard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/TopBar"
-        app:layout_constraintBottom_toBottomOf="parent">
+
+        app:layout_constraintTop_toBottomOf="@id/TopBar">
+
 
     </TableLayout>
+
+    <!--<TextView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dp"-->
+        <!--android:background="@drawable/bottom_bar"-->
+        <!--app:layout_constraintTop_toBottomOf="@+id/GameBoard"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/gameBoardBanner"/>-->
+
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/gameBoardBanner"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bottom_bar"
+        ads:adSize="BANNER"
+        ads:adUnitId="@string/testUnitId"
+        ads:layout_constraintBottom_toBottomOf="parent"
+        ads:layout_constraintLeft_toLeftOf="parent"
+        ads:layout_constraintRight_toRightOf="parent"
+        ads:layout_constraintTop_toBottomOf="@+id/GameBoard">
+
+    </com.google.android.gms.ads.AdView>
+
+
+
 
 </android.support.constraint.ConstraintLayout>

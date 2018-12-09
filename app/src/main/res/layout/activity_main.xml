@@ -37,10 +37,12 @@
                 app:layout_constraintRight_toRightOf="@id/rightMenuButton"/>
 
             <Button
-                style="@style/MenuBarButtons"
                 android:id="@+id/rightMenuButton"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintRight_toRightOf="parent"/>
+                style="@style/MenuBarButtons"
+                android:background="@drawable/gear_icon"
+                android:onClick="toggleSettingsDialog"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
 
@@ -60,6 +62,16 @@
             android:layout_weight="1"
             android:layout_gravity="fill">
             <Button
+                android:id="@+id/TinyBoardButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_rowWeight="1"
+                android:layout_columnWeight="1"
+                android:text="@string/tinyButton"
+                android:onClick="sendBoardData"
+                android:contentDescription="@string/tinyNumCols"/>
+
+            <Button
                 android:id="@+id/SmallBoardButton"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -69,6 +81,12 @@
                 android:onClick="sendBoardData"
                 android:contentDescription="@string/smallNumCols"/>
 
+
+        </TableRow>
+
+        <TableRow
+            android:layout_weight="1"
+            android:layout_gravity="center">
             <Button
                 android:id="@+id/MediumBoardButton"
                 android:layout_width="match_parent"
@@ -78,11 +96,7 @@
                 android:text="@string/mediumButton"
                 android:onClick="sendBoardData"
                 android:contentDescription="@string/mediumNumCols"/>
-        </TableRow>
 
-        <TableRow
-            android:layout_weight="1"
-            android:layout_gravity="center">
             <Button
                 android:id="@+id/LargeBoardButton"
                 android:layout_width="match_parent"
@@ -93,16 +107,21 @@
                 android:onClick="sendBoardData"
                 android:contentDescription="@string/largeNumCols"/>
 
-            <Button
-                android:id="@+id/CustomBoardButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_rowWeight="1"
-                android:layout_columnWeight="1"
-                android:text="@string/customButton" />
         </TableRow>
 
 
+        <com.google.android.gms.ads.AdView
+            xmlns:ads="http://schemas.android.com/apk/res-auto"
+            style="@style/bannerAds"
+            android:id="@+id/mainScreenBanner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            ads:adSize="BANNER"
+            ads:adUnitId="@string/testUnitId">
+        </com.google.android.gms.ads.AdView>
+
     </TableLayout>
+
+
 
 </android.support.constraint.ConstraintLayout>

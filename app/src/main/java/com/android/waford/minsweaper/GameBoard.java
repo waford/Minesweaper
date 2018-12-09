@@ -9,16 +9,21 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class GameBoard extends AppCompatActivity {
 
     private static final String LOG_TAG = GameBoard.class.getSimpleName();
-    private static final int BOMB_DENSITY = 4; //1 bomb per BOMB_DENSITY squares
+    private int bombDensity; //1 bomb per bombDensity squares,
     private int numCols;
     private int numRows;
     private int boardHeight;
@@ -32,6 +37,8 @@ public class GameBoard extends AppCompatActivity {
     private TextView timer;
     private long startTime = 0;
     private TextView flagsLeft;
+    private AdView gameBoardAdView;
+    private Button resetButton;
 
 
     Handler timerHandler = new Handler();
@@ -40,7 +47,7 @@ public class GameBoard extends AppCompatActivity {
         @Override
         public void run() {
             //Timer function
-            long millies = System.currentTimeMillis() - startTime;
+            long millies = startTime += 500;
             int seconds = (int) (millies / 1000);
             int minutes = seconds / 60;
             seconds = seconds % 60;
@@ -56,8 +63,10 @@ public class GameBoard extends AppCompatActivity {
         gameBoard = findViewById(R.id.GameBoard);
         flagsLeft = findViewById(R.id.Flags_Left);
         timer = findViewById(R.id.Timer);
+        resetButton = findViewById(R.id.ResetButton);
         Intent intent = getIntent();
         numCols = intent.getIntExtra("NUM_COLS", 5);
+        bombDensity = intent.getIntExtra("BOMB_DENSITY", 6);
         tileSize = setTileSize();
         bombCount = 0;
         numFlagsLeft = 0;
@@ -66,12 +75,33 @@ public class GameBoard extends AppCompatActivity {
         firstClick = true;
         flagsLeft = findViewById(R.id.Flags_Left);
         makeBoard(tileSize);
+        adInit();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(!firstClick) {
+            timerHandler.postDelayed(timerRunnable, 0);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        timerHandler.removeCallbacks(timerRunnable);
+    }
+
+    private void adInit() {
+        MobileAds.initialize(this, "ca-app-pub-3203445673322999~8135639616");
+        gameBoardAdView = findViewById(R.id.gameBoardBanner);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        gameBoardAdView.loadAd(adRequest);
+    }
 
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if(hasFocus) {
+        if (hasFocus) {
             boardHeight = gameBoard.getHeight();
         }
     }
@@ -96,20 +126,23 @@ public class GameBoard extends AppCompatActivity {
 
     }
 
-    private void checkWin() {
+    private void checkWin(boolean isBomb) {
         //Checks if there is a win based on if the number of correctly flagged bombs is equal to the
         //number of bombs. Should add another win condition not based on flags
-        boolean flagWin = numCorrectFlagged == this.bombCount;
-        boolean unOpenedWin = unOpened == bombCount;
-        if(flagWin || unOpenedWin) {
+        //boolean flagWin = numCorrectFlagged == this.bombCount;
+        boolean unOpenedWin = (unOpened == bombCount) && !isBomb;
+        if (unOpenedWin) {
             timerHandler.removeCallbacks(timerRunnable);
             Toast win = Toast.makeText(this, "You won!", Toast.LENGTH_SHORT);
             win.show();
-            for(int i = 0; i < numRows; i++){ //Uncovers all the non-clicked tiles
-                for(int j = 0; j < numCols; j++) {
+            for (int i = 0; i < numRows; i++) { //Uncovers all the non-clicked tiles
+                for (int j = 0; j < numCols; j++) {
                     TileButton imgTile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
-                    if(!imgTile.getIsClicked() && imgTile.getNumBombs() != 9) {
+                    if (!imgTile.getIsClicked() && imgTile.getNumBombs() != 9) {
                         imgTile.performClick();
+                    } else {
+                        imgTile.setIsClicked(true);
+                        imgTile.setIsMarked(true);
                     }
                 }
             }
@@ -121,16 +154,32 @@ public class GameBoard extends AppCompatActivity {
         //Called when a mine tile is pressed
         timerHandler.removeCallbacks(timerRunnable);
         imgTile.setImageResource(R.drawable.minelost);
-        for(int i = 0; i < numRows; i++) {
-            for(int j = 0; j < numCols; j++) {
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
                 TileButton tile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
-                if(!tile.getIsClicked() && tile.getNumBombs() == 9 && !tile.isMarked) {
-                    tile.setImageResource(R.drawable.mine);
+                if(!tile.getIsClicked()) {
+                    if (tile.getNumBombs() == 9 && !tile.getIsMarked()) {
+                        tile.setImageResource(R.drawable.mine);
+                    }
+                    tile.setIsClicked(true);
+                    tile.setIsMarked(false);
                 }
             }
         }
+        resetButton.setBackgroundResource(R.drawable.red_reset_tile);
         Toast lose = Toast.makeText(this, "You lose!", Toast.LENGTH_SHORT);
         lose.show();
+    }
+
+    public void ButtonResetBoard(View view) {
+        resetBoard(); //Resets board via button
+        unOpened = numRows * numCols;
+        numCorrectFlagged = 0;
+        resetButton.setBackgroundResource(R.drawable.blue_reset_tile);
+        timer.setText(getString(R.string.startTimer));
+        timerHandler.removeCallbacks(timerRunnable);
+        firstClick = true;
+
     }
 
     private void resetBoard() {
@@ -139,56 +188,92 @@ public class GameBoard extends AppCompatActivity {
     }
 
     private void tileClick(TileButton tile, int maxRow, int maxCol) {
-        if(tile != null && !tile.getIsClicked()) {
+        if (tile != null && !tile.getIsClicked()) {
             unOpened--;
         }
-        if(firstClick) {
-            while(tile.numBombs != 0) {
-               resetBoard();
+        if (firstClick) {
+            while (tile.getNumBombs() != 0) {
+                resetBoard();
                 TableRow tileRow = (TableRow) gameBoard.getChildAt(tile.getRow());
                 tile = (TileButton) tileRow.getChildAt(tile.getCol());
                 Log.d(LOG_TAG, "First click was a mine");
             }
             firstClick = false;
-            startTime = System.currentTimeMillis();
+            startTime = 0;
             timerHandler.postDelayed(timerRunnable, 0);
         }
         Log.d(LOG_TAG, "Unopened: " + Integer.toString(unOpened));
         Log.d(LOG_TAG, "Status of tile [" + Integer.toString(tile.getRow()) + "," + Integer.toString(tile.getCol()) + "] clicked: " + Boolean.toString(tile.getIsClicked()));
-        if(tile.getIsMarked() || tile.getIsClicked()) {
+        if (tile.getIsMarked()) {
             return;
+        } else if (tile.getIsClicked()) {
+            int centerRow = tile.getRow();
+            int centerCol = tile.getCol();
+            int correctNumBombs = tile.getNumBombs();
+            int surroundingBombs = 0;
+            ArrayList<Integer> rows = new ArrayList<>();
+            ArrayList<Integer> cols = new ArrayList<>();
+            for (int i = -1; i <= 1; i++) {
+                int tmpRow = centerRow + i;
+                for (int j = -1; j <= 1; j++) {
+                    int tmpCol = centerCol + j;
+                    boolean diffSquare = i != 0 || j != 0;
+                    try {
+                        TableRow tileRow = (TableRow) gameBoard.getChildAt(tmpRow);
+                        TileButton testTile = (TileButton) tileRow.getChildAt(tmpCol);
+                        boolean isClicked = testTile.getIsClicked();
+                        if (diffSquare && !isClicked) {
+                            if (testTile.getNumBombs() == 9 && testTile.getIsMarked()) {
+                                surroundingBombs++;
+                            } else {
+                                rows.add(tmpRow);
+                                cols.add(tmpCol);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.d(LOG_TAG, e.toString());
+                    }
+                }
+            }
+            if (correctNumBombs == surroundingBombs) {
+                for (int i = 0; i < rows.size(); i++) {
+                    TableRow tileRow = (TableRow) gameBoard.getChildAt(rows.get(i));
+                    TileButton testTile = (TileButton) tileRow.getChildAt(cols.get(i));
+                    tileClick(testTile, maxRow, maxCol);
+                }
+            }
         } else {
             int numBombs = tile.getNumBombs();
             switch (numBombs) {
                 case 0:
                     tile.setIsClicked(true);
 
-                        tile.setImageResource(R.drawable.blank_square);
-                        int centerCol = tile.getCol();
-                        int centerRow = tile.getRow();
-                        for (int i = -1; i <= 1; i++) {
-                            int tmpRow = centerRow + i;
-                            if (tmpRow < 0 || tmpRow > maxRow) {
-                                continue;
-                            }
-                            for (int j = -1; j <= 1; j++) {
-                                try {
-                                    int tmpCol = centerCol + j;
-                                    if (tmpCol < 0 || tmpCol > maxCol) {
-                                        continue;
-                                    }
-                                    TableRow tileRow = (TableRow) gameBoard.getChildAt(tmpRow);
-                                    TileButton testTile = (TileButton) tileRow.getChildAt(tmpCol);
-                                    int tmpNumBombs = testTile.getNumBombs();
-                                    if (tmpNumBombs < 9 && (i != 0 || j != 0) && !testTile.getIsClicked()) {
-                                        Log.d(LOG_TAG, "Button at row: " + Integer.toString(tmpRow) + " col: " + Integer.toString(tmpCol) + " was clicked");
-                                        tileClick(testTile, maxRow, maxCol);
-                                    }
-                                } catch (NullPointerException e) {
-                                    Log.d(LOG_TAG, "Threw a null pointer exception");
+                    tile.setImageResource(R.drawable.blank_square);
+                    int centerCol = tile.getCol();
+                    int centerRow = tile.getRow();
+                    for (int i = -1; i <= 1; i++) {
+                        int tmpRow = centerRow + i;
+                        if (tmpRow < 0 || tmpRow > maxRow) {
+                            continue;
+                        }
+                        for (int j = -1; j <= 1; j++) {
+                            try {
+                                int tmpCol = centerCol + j;
+                                if (tmpCol < 0 || tmpCol > maxCol) {
+                                    continue;
                                 }
+                                TableRow tileRow = (TableRow) gameBoard.getChildAt(tmpRow);
+                                TileButton testTile = (TileButton) tileRow.getChildAt(tmpCol);
+                                int tmpNumBombs = testTile.getNumBombs();
+                                if (tmpNumBombs < 9 && (i != 0 || j != 0) && !testTile.getIsClicked()) {
+                                    Log.d(LOG_TAG, "Button at row: " + Integer.toString(tmpRow) + " col: " + Integer.toString(tmpCol) + " was clicked");
+                                    tileClick(testTile, maxRow, maxCol);
+                                }
+                            } catch (NullPointerException e) {
+                                Log.d(LOG_TAG, "Threw a null pointer exception");
                             }
                         }
+                    }
                     break;
                 case 1:
                     tile.setImageResource(R.drawable.one_square);
@@ -233,17 +318,17 @@ public class GameBoard extends AppCompatActivity {
             }
 
         }
-        checkWin();
+        checkWin(tile.getNumBombs() == 9);
     }
 
     private void markTile(TileButton imgTile) {
-        if(imgTile.getIsClicked()) {
+        if (imgTile.getIsClicked()) {
             return;
         }
-        if(imgTile.getIsMarked()) {
+        if (imgTile.getIsMarked()) {
             imgTile.setImageResource(R.drawable.tile);
             imgTile.setIsMarked(false);
-            if(imgTile.getNumBombs() == 9) {
+            if (imgTile.getNumBombs() == 9) {
                 numCorrectFlagged--;
             }
             numFlagsLeft++;
@@ -251,13 +336,13 @@ public class GameBoard extends AppCompatActivity {
         } else {
             imgTile.setImageResource(R.drawable.flag);
             imgTile.setIsMarked(true);
-            if(imgTile.getNumBombs() == 9) {
+            if (imgTile.getNumBombs() == 9) {
                 numCorrectFlagged++;
             }
             numFlagsLeft--;
         }
         flagsLeft.setText(String.format("%03d", numFlagsLeft));
-        checkWin();
+        checkWin(imgTile.getNumBombs() == 9);
 
 
     }
@@ -273,7 +358,7 @@ public class GameBoard extends AppCompatActivity {
         imgTile.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if(!imgTile.getIsClicked()) {
+                if (!imgTile.getIsClicked()) {
                     Log.d(LOG_TAG, "Long click triggered");
                     markTile(imgTile);
                     return true;
@@ -282,7 +367,6 @@ public class GameBoard extends AppCompatActivity {
 
             }
         });
-
     }
 
     private int setTileSize() {
@@ -292,8 +376,9 @@ public class GameBoard extends AppCompatActivity {
         int pixelDPI = (int) Resources.getSystem().getDisplayMetrics().density;
         int tileSize = width / numCols;
         int trim = tileSize;
-        if(trim < 50 * pixelDPI) {
-            trim = 50 * pixelDPI;
+        int dpiThreshold = 100;
+        if (trim < dpiThreshold * pixelDPI) {
+            trim = dpiThreshold * pixelDPI;
         }
         numRows = (height - trim) / tileSize;
         unOpened = numRows * numCols; //Sets number of unopened tiles
@@ -303,8 +388,8 @@ public class GameBoard extends AppCompatActivity {
     private int[][] generateBombs() {
         int[][] bombs = new int[numRows][numCols];
         int totalSquares = numRows * numCols;
-        int bombsLeft = totalSquares / BOMB_DENSITY;
-        bombCount = totalSquares / BOMB_DENSITY;
+        int bombsLeft = totalSquares / bombDensity;
+        bombCount = totalSquares / bombDensity;
         numFlagsLeft = bombCount;
         if (bombsLeft == 0) {
             bombsLeft = 1;
@@ -420,17 +505,9 @@ public class GameBoard extends AppCompatActivity {
         return board;
     }
 
-    public void ButtonResetBoard(View view) {
-        resetBoard(); //Resets board via button
-        unOpened = numRows * numCols;
-        numCorrectFlagged = 0;
-        timer.setText(getString(R.string.startTimer));
-        timerHandler.removeCallbacks(timerRunnable);
-        firstClick = true;
 
-    }
 
-    class TileButton extends android.support.v7.widget.AppCompatImageView {
+    private class TileButton extends android.support.v7.widget.AppCompatImageView {
 
         private int row;
         private int col;
@@ -464,14 +541,24 @@ public class GameBoard extends AppCompatActivity {
             return this.col;
         }
 
-        public int getNumBombs() { return this.numBombs; }
+        public int getNumBombs() {
+            return this.numBombs;
+        }
 
-        public boolean getIsClicked() { return this.isClicked; }
+        public boolean getIsClicked() {
+            return this.isClicked;
+        }
 
-        public boolean getIsMarked() { return this.isMarked; }
+        public boolean getIsMarked() {
+            return this.isMarked;
+        }
 
-        public void setIsClicked(boolean isClicked) { this.isClicked = isClicked; }
+        public void setIsClicked(boolean isClicked) {
+            this.isClicked = isClicked;
+        }
 
-        public void setIsMarked(boolean isMarked) { this.isMarked = isMarked; }
+        public void setIsMarked(boolean isMarked) {
+            this.isMarked = isMarked;
+        }
     }
 }
