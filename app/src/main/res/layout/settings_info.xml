@@ -52,7 +52,9 @@
 
     <Button
         style="@style/settingsDialogButtons"
-        android:text="@string/highscores" />
+        android:id="@+id/HighScoreButton"
+        android:text="@string/highscores"
+        android:onClick="showHighScores"/>
 
     <Button
         style="@style/settingsDialogButtons"

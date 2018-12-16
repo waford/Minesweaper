@@ -40,4 +40,12 @@
     <style name="dialogRadioButtons">
         <item name="android:textSize">15sp</item>
     </style>
+
+    <style name="leaderBoardTitles">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textColor">#000</item>
+        <item name="android:textSize">20sp</item>
+    </style>
 </resources>

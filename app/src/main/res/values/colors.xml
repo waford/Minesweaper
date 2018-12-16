@@ -5,4 +5,5 @@
     <color name="colorAccent">#D81B60</color>
     <color name="redFont">#FF0000</color>
     <color name="backGroundGrey">#e5e5e5</color>
+    <color name="blue">#000FFF</color>
 </resources>

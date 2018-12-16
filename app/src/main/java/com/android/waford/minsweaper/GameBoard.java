@@ -1,15 +1,20 @@
 package com.android.waford.minsweaper;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -17,12 +22,21 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+
+import org.w3c.dom.Text;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class GameBoard extends AppCompatActivity {
 
     private static final String LOG_TAG = GameBoard.class.getSimpleName();
+    private static final String HIGHSCORE_FILENAME = "highScores.txt";
     private int bombDensity; //1 bomb per bombDensity squares,
     private int numCols;
     private int numRows;
@@ -39,6 +53,11 @@ public class GameBoard extends AppCompatActivity {
     private TextView flagsLeft;
     private AdView gameBoardAdView;
     private Button resetButton;
+    private String[][] highScoreData;
+    private int highScoreCol;
+    private boolean highScoreClick;
+    private AlertDialog.Builder winAlertBuilder;
+    private AlertDialog loseAlert;
 
 
     Handler timerHandler = new Handler();
@@ -66,16 +85,56 @@ public class GameBoard extends AppCompatActivity {
         resetButton = findViewById(R.id.ResetButton);
         Intent intent = getIntent();
         numCols = intent.getIntExtra("NUM_COLS", 5);
+        highScoreCol = intent.getIntExtra("HIGH_SCORE_COL", 0);
         bombDensity = intent.getIntExtra("BOMB_DENSITY", 6);
+        flagsLeft = findViewById(R.id.Flags_Left);
+        init();
+        makeBoard(tileSize);
+        alertInit();
+        adInit();
+    }
+
+    private void init() {
         tileSize = setTileSize();
         bombCount = 0;
         numFlagsLeft = 0;
         boardHeight = 0;
         numCorrectFlagged = 0;
         firstClick = true;
-        flagsLeft = findViewById(R.id.Flags_Left);
-        makeBoard(tileSize);
-        adInit();
+        highScoreClick = true;
+        try{
+            FileInputStream fis = this.openFileInput(HIGHSCORE_FILENAME);
+            ObjectInputStream in = new ObjectInputStream(fis);
+            highScoreData = (String[][]) in.readObject();
+        } catch(IOException | ClassNotFoundException e) {
+            Log.d(LOG_TAG, e.toString());
+        }
+    }
+
+    private void alertInit() {
+        winAlertBuilder = new AlertDialog.Builder(this);
+        winAlertBuilder.setTitle("You Won!");
+        winAlertBuilder.setMessage("Test");
+        AlertDialog.Builder loseAlertBuilder = new AlertDialog.Builder(this);
+        loseAlertBuilder.setTitle("Tough Loss");
+        loseAlertBuilder.setMessage("Sorry you didn't quite manage to sweep all those mines." + "\nWould you like to play again?"); // Maybe add some random lose messages
+        loseAlertBuilder.setPositiveButton("Sure", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                buttonResetBoard(null);
+                dialog.dismiss();
+            }
+        });
+        loseAlertBuilder.setNegativeButton("Not right now", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                GameBoard.super.finish();
+                //Back naviagtion
+
+            }
+        });
+        loseAlert = loseAlertBuilder.create();
     }
 
     @Override
@@ -133,8 +192,6 @@ public class GameBoard extends AppCompatActivity {
         boolean unOpenedWin = (unOpened == bombCount) && !isBomb;
         if (unOpenedWin) {
             timerHandler.removeCallbacks(timerRunnable);
-            Toast win = Toast.makeText(this, "You won!", Toast.LENGTH_SHORT);
-            win.show();
             for (int i = 0; i < numRows; i++) { //Uncovers all the non-clicked tiles
                 for (int j = 0; j < numCols; j++) {
                     TileButton imgTile = (TileButton) ((TableRow) gameBoard.getChildAt(i)).getChildAt(j);
@@ -146,8 +203,76 @@ public class GameBoard extends AppCompatActivity {
                     }
                 }
             }
+            checkHighScore();
+        }
+    }
+
+    private void checkHighScore() {
+        String testTime = timer.getText().toString();
+        for(int i = 0; i < highScoreData[highScoreCol].length; i++) {
+            if((testTime.compareTo(highScoreData[highScoreCol][i]) < 0 || highScoreData[highScoreCol][i].equals("NaN\n")) && highScoreClick) {
+
+
+
+                String[] newHs = (String[]) replaceAtPosition(highScoreData[highScoreCol], testTime, i);
+                buildAddHighScoreAlert(newHs, i);
+                highScoreData[highScoreCol] = newHs;
+                highScoreClick = false;
+                try{
+                    FileOutputStream fos = this.openFileOutput(HIGHSCORE_FILENAME, MODE_PRIVATE);
+                    ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    oos.writeObject(highScoreData);
+                    fos.close();
+                    oos.close();
+                } catch(IOException e) {
+                    Log.d(LOG_TAG, e.toString());
+                }
+                break;
+            }
         }
 
+    }
+
+    private Object[] replaceAtPosition(Object[] items, Object replace, int replacePosition) {
+        //Places object at index replacePosition, and shifts everything down, removing the last element
+        for (int i = items.length - 1; i > replacePosition; i--) {
+            items[i] = items[i - 1];
+        }
+        items[replacePosition] = replace + "\n";
+        return items;
+    }
+
+    private void buildAddHighScoreAlert(String[] highScores, int index) {
+        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View newHighScoreLayout = layoutInflater.inflate(R.layout.win_alert, null);
+        LinearLayout mainLayout = newHighScoreLayout.findViewById(R.id.MainLeaderBoard);
+        for(int i = 0; i< highScores.length; i++) {
+            if(i != index){
+                TextView tmp = new TextView(this);
+                tmp.setText(highScores[i]);
+                tmp.setTextColor(getResources().getColor(R.color.blue));
+                mainLayout.addView(tmp);
+            } else {
+                EditText tmp = new EditText(this);
+                tmp.setHint("Place Holder"); //Add names to highscore data
+            }
+
+        }
+
+        winAlertBuilder.setPositiveButton("Play again", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                buttonResetBoard(null);
+                dialog.dismiss();
+            }
+        });
+        winAlertBuilder.setNegativeButton("No I'm done for now", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                GameBoard.super.finish();
+            }
+        });
     }
 
     private void lose(TileButton imgTile) {
@@ -167,11 +292,20 @@ public class GameBoard extends AppCompatActivity {
             }
         }
         resetButton.setBackgroundResource(R.drawable.red_reset_tile);
-        Toast lose = Toast.makeText(this, "You lose!", Toast.LENGTH_SHORT);
-        lose.show();
+        showLoseAlert();
     }
 
-    public void ButtonResetBoard(View view) {
+    private void showLoseAlert(){
+        //changes a few of the defaul alert view parameters
+        loseAlert.show();
+        TextView tmp = loseAlert.findViewById(android.R.id.message);
+        tmp.setTextSize(15f);
+        tmp.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+        Button positiveButton = loseAlert.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setTextColor(getResources().getColor(R.color.blue));
+
+    }
+    public void buttonResetBoard(View view) {
         resetBoard(); //Resets board via button
         unOpened = numRows * numCols;
         numCorrectFlagged = 0;
